@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CGPA Ledger — Result Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#182742;
+    --navy-2:#22355c;
+    --gold:#c9a227;
+    --gold-soft:#e7d18f;
+    --paper:#f1ede3;
+    --paper-2:#e7e1d1;
+    --ink:#1b2233;
+    --ink-soft:#5b5f6b;
+    --rule:#c8bfa6;
+    --good:#2f6b4f;
+    --bad:#a83c1f;
+    --radius: 3px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--paper);
+    background-image:
+      linear-gradient(var(--paper-2) 1px, transparent 1px);
+    background-size: 100% 2.15em;
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    padding:40px 20px 80px;
+  }
+  .sheet{
+    max-width: 880px;
+    margin: 0 auto;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    box-shadow: 0 0 0 4px var(--paper), 0 0 0 5px var(--ink), 10px 12px 0 rgba(27,34,51,0.08);
+    position: relative;
+  }
+  .letterhead{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    padding: 30px 36px 18px;
+    border-bottom: 3px double var(--ink);
+    background: var(--navy);
+    color: var(--paper);
+  }
+  .letterhead .mark{
+    width:46px; height:46px;
+    border:2px solid var(--gold);
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    color:var(--gold-soft);
+    font-size:18px;
+    flex-shrink:0;
+  }
+  .letterhead .titles{
+    display:flex;
+    gap:14px;
+    align-items:center;
+  }
+  .letterhead h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: clamp(22px, 4vw, 30px);
+    letter-spacing: 0.01em;
+    margin:0;
+  }
+  .letterhead .sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color: var(--gold-soft);
+    margin-top:4px;
+  }
+  .letterhead .scale{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color: var(--paper);
+    opacity:0.75;
+    text-align:right;
+    line-height:1.6;
+  }
+
+  .body-pad{ padding: 28px 36px 36px; }
+
+  .row-header, .course-row{
+    display:grid;
+    grid-template-columns: 34px 1fr 100px 100px 84px 44px;
+    gap:10px;
+    align-items:center;
+  }
+  .row-header{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color: var(--ink-soft);
+    padding: 0 4px 8px;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  #courseList{
+    display:flex;
+    flex-direction:column;
+  }
+  .course-row{
+    padding: 10px 4px;
+    border-bottom: 1px dashed var(--rule);
+  }
+  .course-row .idx{
+    font-family:'IBM Plex Mono', monospace;
+    color: var(--ink-soft);
+    font-size:13px;
+  }
+  .course-row input[type="text"],
+  .course-row input[type="number"],
+  .course-row select{
+    width:100%;
+    font-family:'Inter', sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+  }
+  .course-row select{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+  }
+  .course-row input:focus, .course-row select:focus{
+    outline: 2px solid var(--navy);
+    outline-offset: 1px;
+    border-color: var(--navy);
+  }
+  .course-row .credit-input{
+    font-family:'IBM Plex Mono', monospace;
+    text-align:center;
+  }
+  .grade-badge{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:13px;
+    text-align:center;
+    padding:8px 6px;
+    border-radius: var(--radius);
+    border: 1px solid var(--rule);
+    background: var(--paper-2);
+    color: var(--ink-soft);
+    letter-spacing:0.02em;
+  }
+  .grade-badge.filled{
+    color: var(--navy);
+    border-color: var(--navy);
+    background: #fff;
+  }
+  .grade-badge.fail{
+    color: var(--bad);
+    border-color: var(--bad);
+    background: #fbeae4;
+  }
+  .remove-btn{
+    background:none;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    width:34px; height:34px;
+    color: var(--bad);
+    font-size:16px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .remove-btn:hover{ background: #fbeae4; border-color: var(--bad); }
+  .remove-btn:focus-visible{ outline:2px solid var(--navy); outline-offset:2px; }
+
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-top:16px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:11px 18px;
+    border-radius: var(--radius);
+    border:1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    cursor:pointer;
+    transition: background .15s, color .15s, transform .05s;
+  }
+  .btn:hover{ background: var(--ink); color: var(--paper); }
+  .btn:active{ transform: translateY(1px); }
+  .btn:focus-visible{ outline:2px solid var(--navy); outline-offset:2px; }
+  .btn-primary{
+    background: var(--navy);
+    color: var(--paper);
+    border-color: var(--navy);
+  }
+  .btn-primary:hover{ background: var(--navy-2); }
+  .btn-ghost{
+    border-color: var(--rule);
+    color: var(--ink-soft);
+  }
+  .btn-ghost:hover{ background: var(--paper-2); color:var(--ink); }
+
+  .error-box{
+    margin-top:14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    color: var(--bad);
+    border-left: 3px solid var(--bad);
+    padding: 8px 12px;
+    background: #fbeae4;
+    display:none;
+  }
+  .error-box.show{ display:block; }
+
+  /* ---- Result panel ---- */
+  .result{
+    margin-top:30px;
+    border-top: 3px double var(--ink);
+    padding-top: 26px;
+    display:grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items:center;
+  }
+  .result-stats{ display:flex; flex-direction:column; gap:10px; }
+  .stat-line{
+    display:flex;
+    justify-content:space-between;
+    max-width:340px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color: var(--ink-soft);
+    border-bottom: 1px dotted var(--rule);
+    padding-bottom:6px;
+  }
+  .stat-line b{ color: var(--ink); font-weight:600; }
+  .cgpa-figure{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size: 15px;
+    color: var(--ink-soft);
+  }
+  .cgpa-figure .num{
+    font-size: 56px;
+    color: var(--navy);
+    display:block;
+    line-height:1;
+    margin-top:2px;
+  }
+
+  .stamp{
+    justify-self:end;
+    width:150px; height:150px;
+    border-radius:50%;
+    border: 3px solid var(--good);
+    color: var(--good);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:15px;
+    line-height:1.25;
+    transform: rotate(-9deg) scale(0.85);
+    opacity:0;
+    transition: transform .4s cubic-bezier(.2,1.4,.4,1), opacity .35s ease;
+    padding: 10px;
+    position:relative;
+  }
+  .stamp::before{
+    content:"";
+    position:absolute;
+    inset:6px;
+    border:1px solid var(--good);
+    border-radius:50%;
+  }
+  .stamp.bad{ border-color: var(--bad); color: var(--bad); }
+  .stamp.bad::before{ border-color: var(--bad); }
+  .stamp.visible{
+    opacity:1;
+    transform: rotate(-9deg) scale(1);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .stamp{ transition:none; }
+  }
+
+  footer.note{
+    margin-top: 22px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    line-height:1.7;
+    border-top: 1px dashed var(--rule);
+    padding-top:14px;
+  }
+
+  @media (max-width: 620px){
+    .row-header{ display:none; }
+    .course-row{
+      grid-template-columns: 1fr;
+      gap:8px;
+      padding: 14px 4px;
+      position:relative;
+    }
+    .course-row .idx{
+      position:absolute; top:14px; right:4px;
+      font-size:11px;
+    }
+    .remove-btn{ justify-self:end; width:auto; padding:6px 12px; }
+    .result{ grid-template-columns: 1fr; }
+    .stamp{ justify-self:center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="letterhead">
+    <div class="titles">
+      <div class="mark">GP</div>
+      <div>
+        <h1>CGPA Ledger</h1>
+        <div class="sub">Cumulative Result Worksheet</div>
+      </div>
+    </div>
+    <div class="scale">Score → Grade<br>70+ A5 · 60+ B4 · 50+ C3 · 45+ D2 · 40+ E1 · &lt;40 F0</div>
+  </div>
+
+  <div class="body-pad">
+    <div class="row-header">
+      <span>№</span>
+      <span>Course title</span>
+      <span>Credit units</span>
+      <span>Score (0–100)</span>
+      <span>Grade</span>
+      <span></span>
+    </div>
+
+    <div id="courseList"></div>
+
+    <div class="toolbar">
+      <div style="display:flex; gap:10px;">
+        <button class="btn" id="addRowBtn" type="button">+ Add course</button>
+        <button class="btn btn-ghost" id="resetBtn" type="button">Reset sheet</button>
+      </div>
+      <button class="btn btn-primary" id="calcBtn" type="button">Compute CGPA</button>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="result">
+      <div class="result-stats">
+        <div class="cgpa-figure">
+          Cumulative GPA
+          <span class="num" id="cgpaNum">—</span>
+        </div>
+        <div class="stat-line"><span>Courses entered</span><b id="statCourses">0</b></div>
+        <div class="stat-line"><span>Total credit units</span><b id="statCredits">0</b></div>
+        <div class="stat-line"><span>Total grade points</span><b id="statPoints">0</b></div>
+      </div>
+      <div class="stamp" id="stamp">—</div>
+    </div>
+
+    <footer class="note">
+      Type in the total score you got per course (e.g. 56) — the grade letter and
+      grade point are worked out for you, so there's no risk of mistyping a grade
+      point by hand. CGPA is then computed as Σ(grade point × credit unit) ÷
+      Σ(credit units), the standard weighted formula, not a plain average.
+    </footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- Core calculation functions (upgraded from the original script) ----
+
+  const GRADE_POINTS = { A: 5, B: 4, C: 3, D: 2, E: 1, F: 0 };
+
+  function gradeLetterToPoint(letter){
+    return GRADE_POINTS.hasOwnProperty(letter) ? GRADE_POINTS[letter] : null;
+  }
+
+  // Converts a raw total score (0-100) into a letter grade + grade point.
+  // This is the piece that removes manual "which grade point is C again?"
+  // guesswork — students type the score they actually got, e.g. 56.
+  const SCORE_BANDS = [
+    { min: 70, letter: "A", point: 5 },
+    { min: 60, letter: "B", point: 4 },
+    { min: 50, letter: "C", point: 3 },
+    { min: 45, letter: "D", point: 2 },
+    { min: 40, letter: "E", point: 1 },
+    { min: 0,  letter: "F", point: 0 }
+  ];
+
+  function scoreToGrade(score){
+    for (const band of SCORE_BANDS){
+      if (score >= band.min) return { letter: band.letter, point: band.point };
+    }
+    return { letter: "F", point: 0 };
+  }
+
+  // Weighted CGPA: sum(gradePoint * creditUnit) / sum(creditUnit)
+  function calculateCGPA(courses){
+    let totalPoints = 0;
+    let totalCredits = 0;
+    for (const c of courses){
+      totalPoints += c.gradePoint * c.credit;
+      totalCredits += c.credit;
+    }
+    if (totalCredits === 0) return { cgpa: 0, totalPoints: 0, totalCredits: 0 };
+    return {
+      cgpa: totalPoints / totalCredits,
+      totalPoints,
+      totalCredits
+    };
+  }
+
+  function classifyCGPA(cgpa){
+    if (cgpa >= 4.50) return { label: "First Class", good: true };
+    if (cgpa >= 3.50) return { label: "Second Class (Upper)", good: true };
+    if (cgpa >= 2.40) return { label: "Second Class (Lower)", good: true };
+    if (cgpa >= 1.50) return { label: "Third Class", good: false };
+    if (cgpa >= 1.00) return { label: "Pass", good: false };
+    return { label: "Fail", good: false };
+  }
+
+  function validateCourse(row){
+    const errors = [];
+
+    const creditRaw = row.credit.value.trim();
+    const credit = parseFloat(creditRaw);
+    if (creditRaw === "" || isNaN(credit) || credit <= 0){
+      errors.push("Credit units must be a positive number.");
+    }
+
+    const scoreRaw = row.score.value.trim();
+    const score = parseFloat(scoreRaw);
+    let gradePoint = null;
+    let letter = null;
+    if (scoreRaw === "" || isNaN(score)){
+      errors.push("Enter the score (total marks) for this course.");
+    } else if (score < 0 || score > 100){
+      errors.push("Score must be between 0 and 100.");
+    } else {
+      const g = scoreToGrade(score);
+      gradePoint = g.point;
+      letter = g.letter;
+    }
+
+    return { errors, credit, gradePoint, letter, score };
+  }
+
+  // ---- UI wiring ----
+
+  const courseList = document.getElementById("courseList");
+  const errorBox = document.getElementById("errorBox");
+  let rowCount = 0;
+
+  function makeRow(){
+    rowCount += 1;
+    const row = document.createElement("div");
+    row.className = "course-row";
+    row.innerHTML = `
+      <span class="idx">${String(rowCount).padStart(2, "0")}</span>
+      <input type="text" class="course-name" placeholder="e.g. Intro to Data Structures">
+      <input type="number" class="credit-input" min="1" step="1" value="3" aria-label="Credit units">
+      <input type="number" class="score-input" min="0" max="100" step="1" placeholder="e.g. 56" aria-label="Score out of 100">
+      <span class="grade-badge" aria-live="polite">—</span>
+      <button class="remove-btn" type="button" aria-label="Remove course">×</button>
+    `;
+    const scoreInput = row.querySelector(".score-input");
+    const badge = row.querySelector(".grade-badge");
+
+    function refreshBadge(){
+      const raw = scoreInput.value.trim();
+      const score = parseFloat(raw);
+      if (raw === "" || isNaN(score)){
+        badge.textContent = "—";
+        badge.className = "grade-badge";
+        return;
+      }
+      if (score < 0 || score > 100){
+        badge.textContent = "0–100";
+        badge.className = "grade-badge fail";
+        return;
+      }
+      const g = scoreToGrade(score);
+      badge.textContent = `${g.letter} (${g.point.toFixed(1)})`;
+      badge.className = "grade-badge filled" + (g.point === 0 ? " fail" : "");
+    }
+
+    scoreInput.addEventListener("input", refreshBadge);
+    row.querySelector(".remove-btn").addEventListener("click", () => {
+      row.remove();
+      renumberRows();
+    });
+    return row;
+  }
+
+  function renumberRows(){
+    const rows = courseList.querySelectorAll(".course-row");
+    rows.forEach((r, i) => {
+      r.querySelector(".idx").textContent = String(i + 1).padStart(2, "0");
+    });
+    rowCount = rows.length;
+  }
+
+  function addRow(){
+    courseList.appendChild(makeRow());
+  }
+
+  function resetSheet(){
+    courseList.innerHTML = "";
+    rowCount = 0;
+    for (let i = 0; i < 3; i++) addRow();
+    errorBox.classList.remove("show");
+    document.getElementById("cgpaNum").textContent = "—";
+    document.getElementById("statCourses").textContent = "0";
+    document.getElementById("statCredits").textContent = "0";
+    document.getElementById("statPoints").textContent = "0";
+    const stamp = document.getElementById("stamp");
+    stamp.classList.remove("visible", "bad");
+    stamp.textContent = "—";
+  }
+
+  function showError(msg){
+    errorBox.textContent = msg;
+    errorBox.classList.add("show");
+  }
+
+  function clearError(){
+    errorBox.classList.remove("show");
+    errorBox.textContent = "";
+  }
+
+  function computeAndRender(){
+    clearError();
+    const rowEls = Array.from(courseList.querySelectorAll(".course-row"));
+    if (rowEls.length === 0){
+      showError("Add at least one course before computing.");
+      return;
+    }
+
+    const courses = [];
+    const allErrors = [];
+
+    rowEls.forEach((r, i) => {
+      const fields = {
+        credit: r.querySelector(".credit-input"),
+        score: r.querySelector(".score-input")
+      };
+      const { errors, credit, gradePoint } = validateCourse(fields);
+      if (errors.length){
+        allErrors.push(`Course ${i + 1}: ${errors.join(" ")}`);
+      } else {
+        courses.push({ credit, gradePoint });
+      }
+    });
+
+    if (allErrors.length){
+      showError(allErrors.join("  "));
+      return;
+    }
+
+    const result = calculateCGPA(courses);
+
+    document.getElementById("cgpaNum").textContent = result.cgpa.toFixed(2);
+    document.getElementById("statCourses").textContent = String(courses.length);
+    document.getElementById("statCredits").textContent = String(result.totalCredits);
+    document.getElementById("statPoints").textContent = result.totalPoints.toFixed(1);
+
+    const cls = classifyCGPA(result.cgpa);
+    const stamp = document.getElementById("stamp");
+    stamp.textContent = cls.label;
+    stamp.classList.toggle("bad", !cls.good);
+    stamp.classList.remove("visible");
+    // retrigger animation
+    void stamp.offsetWidth;
+    stamp.classList.add("visible");
+  }
+
+  document.getElementById("addRowBtn").addEventListener("click", addRow);
+  document.getElementById("resetBtn").addEventListener("click", resetSheet);
+  document.getElementById("calcBtn").addEventListener("click", computeAndRender);
+
+  // initial state
+  resetSheet();
+})();
+</script>
+
+</body>
+</html>
